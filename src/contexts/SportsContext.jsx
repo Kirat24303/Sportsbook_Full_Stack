@@ -1,36 +1,48 @@
 'use client'
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { getSports } from "@/actions/sports";
 import { io } from "socket.io-client";
+import { usePathname } from "next/navigation";
 
 const SportsContext = createContext();
 
 export const SportsProvider = ({ children }) => {
     const [sports, setSports] = useState([]);
     const [loading, setLoading] = useState(true);
+    const pathname = usePathname();
+    const sportsRef = useRef([]);
 
-    const fetchSports = async (force = false) => {
+    const fetchSports = useCallback(async (force = false) => {
         try {
-            if (!force && sports !== null && sports.length > 0) {
+            if (!force && sportsRef.current !== null && sportsRef.current.length > 0) {
                 setLoading(false); return;
             }
             const sportsData = await getSports();
-            setSports(sportsData.documents);
+            const docs = sportsData.documents || [];
+            sportsRef.current = docs;
+            setSports(docs);
             setLoading(false);
         }
         catch (error) {
             console.log(error);
             setLoading(false);
         }
-    }
+    }, [])
 
     useEffect(() => {
         fetchSports();
+
+        const allowedRoutes = ['/book-court', '/rto'];
+        if (!allowedRoutes.includes(pathname)) {
+            console.log(`Socket connection skipped for route: ${pathname}`);
+            return;
+        }
+
         let socket;
         try {
             socket = io();
             socket.on("connect", () => {
-                console.log("Connected to socket server");
+                console.log(`Connected to socket server on route: ${pathname}`);
             });
 
             socket.on("connect_error", (error) => {
@@ -46,12 +58,22 @@ export const SportsProvider = ({ children }) => {
         }
 
         return () => {
-            if (socket) socket.disconnect();
+            if (socket) {
+                console.log(`Disconnecting socket from route: ${pathname}`);
+                socket.disconnect();
+            }
         };
-    }, [])
+    }, [pathname])
+
+    const contextValue = useMemo(() => ({
+        sports,
+        loading,
+        setSports,
+        refreshSports: fetchSports
+    }), [sports, loading, fetchSports]);
 
     return (
-        <SportsContext.Provider value={{ sports, loading, setSports, refreshSports: fetchSports }}>
+        <SportsContext.Provider value={contextValue}>
             {children}
         </SportsContext.Provider>
     )

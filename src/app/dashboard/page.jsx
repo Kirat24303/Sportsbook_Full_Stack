@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -36,8 +36,6 @@ export default function Dashboard() {
             if (res.documents && res.documents.length > 0) {
                 const booking = res.documents[0];
                 setActiveBooking(booking);
-
-                // Generate QR URL from qrDetail
                 if (booking.qrDetail) {
                     const url = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(booking.qrDetail)}`;
                     setQrUrl(url);
@@ -58,13 +56,13 @@ export default function Dashboard() {
         }
     }, [user]);
 
+    const expiringRef = useRef(false);
+
     useEffect(() => {
         if (!activeBooking) return;
 
-        let isExpiring = false;
-
         const calculateTimeLeft = () => {
-            if (isExpiring) return;
+            if (expiringRef.current) return;
 
             const now = new Date();
             const endDateTimeStr = `${activeBooking.date}T${activeBooking.endTime}`;
@@ -74,11 +72,17 @@ export default function Dashboard() {
 
             if (difference <= 0) {
                 setTimeLeft('Time Up');
-                isExpiring = true;
+                expiringRef.current = true;
                 clearInterval(timer);
+
+                console.log(`Booking ${activeBooking.id} expired. Triggering server-side update...`);
                 service.expireBooking(activeBooking.id).then(() => {
-                    fetchActiveBooking();
-                    isExpiring = false;
+                    fetchActiveBooking().finally(() => {
+                        expiringRef.current = false;
+                    });
+                }).catch(err => {
+                    console.error("Failed to expire booking:", err);
+                    expiringRef.current = false;
                 });
                 return;
             }
@@ -259,8 +263,6 @@ export default function Dashboard() {
                                                     </Button>
                                                 </div>
                                             </div>
-
-                                            {/* Timer Section */}
                                             <div className="md:border-l border-white/5 md:pl-8 flex flex-col items-center justify-center min-w-[150px]">
                                                 <Timer className="w-8 h-8 text-primary mb-2 opacity-50" />
                                                 <p className="text-[10px] uppercase font-bold text-gray-500 tracking-wider mb-1">Time Left</p>

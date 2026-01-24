@@ -15,7 +15,7 @@ export async function createSport(data) {
             },
         })
         revalidatePath('/')
-        await triggerSocketUpdate()
+        await triggerSocketUpdate('create-sport')
         return sport
     }
     catch (error) {
@@ -36,7 +36,7 @@ export async function updateSport(id, data) {
             },
         })
         revalidatePath('/')
-        await triggerSocketUpdate()
+        await triggerSocketUpdate('update-sport')
         return sport
     }
     catch (error) {
@@ -47,7 +47,7 @@ export async function deleteSport(id) {
     try {
         await prisma.sport.delete({ where: { id }, })
         revalidatePath('/')
-        await triggerSocketUpdate()
+        await triggerSocketUpdate('delete-sport')
         return true
     }
     catch (error) {

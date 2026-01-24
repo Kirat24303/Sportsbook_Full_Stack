@@ -17,6 +17,7 @@ export default function AgniCodersBooking() {
   const [equipmentCounts, setEquipmentCounts] = useState({});
   const [courts, setCourts] = useState([]);
   const [selectedCourt, setSelectedCourt] = useState("");
+  const [duration, setDuration] = useState(60);
   const { showToast } = useToast();
   const { sports: spt, setSports } = useSport();
 
@@ -80,7 +81,7 @@ export default function AgniCodersBooking() {
       const currentdate = now.toLocaleDateString("en-CA");
       console.log("Date Now -> ", currentdate);
       const currenttime = now.toTimeString().split(" ")[0];
-      const endDateTime = new Date(now.getTime() + 60 * 60 * 1000);
+      const endDateTime = new Date(now.getTime() + duration * 60 * 1000);
       const Enddate = endDateTime.toLocaleDateString("en-CA");
       const Endtime = endDateTime.toTimeString().split(" ")[0];
 
@@ -213,6 +214,24 @@ export default function AgniCodersBooking() {
               <p className="text-sm text-muted-foreground mt-2 text-right">
                 {isCapacityBased ? `Spots Left: ${availableCourts}` : `Available Courts: ${availableCourts}`}
               </p>
+            </div>
+
+            <div>
+              <h3 className="text-lg font-semibold text-foreground mb-4">Booking Duration</h3>
+              <select
+                value={duration}
+                onChange={(e) => setDuration(parseInt(e.target.value))}
+                className="w-full bg-accent/5 border border-white/10 dark:border-white/10 border-black/10 text-foreground rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all font-medium"
+              >
+                <option value={1} className="bg-background text-foreground">1 Minute</option>
+                <option value={2} className="bg-background text-foreground">2 Minutes</option>
+                <option value={30} className="bg-background text-foreground">30 Minutes</option>
+                <option value={60} className="bg-background text-foreground">1 Hour</option>
+                <option value={90} className="bg-background text-foreground">1.5 Hours</option>
+                <option value={120} className="bg-background text-foreground">2 Hours</option>
+                <option value={180} className="bg-background text-foreground">3 Hours</option>
+                <option value={240} className="bg-background text-foreground">4 Hours</option>
+              </select>
             </div>
           </div>
 

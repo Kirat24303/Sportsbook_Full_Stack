@@ -29,7 +29,7 @@ export async function createBooking(data) {
             },
         })
         revalidatePath('/')
-        await triggerSocketUpdate()
+        await triggerSocketUpdate('create-booking')
         return { success: true, booking }
     }
     catch (error) {
@@ -53,7 +53,7 @@ export async function updateBooking(id, data) {
             },
         })
         revalidatePath('/')
-        await triggerSocketUpdate()
+        await triggerSocketUpdate('update-booking')
         return booking
     }
     catch (error) {
@@ -66,7 +66,7 @@ export async function deleteBooking(id) {
     try {
         await prisma.booking.delete({ where: { id }, })
         revalidatePath('/')
-        await triggerSocketUpdate()
+        await triggerSocketUpdate('delete-booking')
         return true
     }
     catch (error) {
@@ -131,7 +131,7 @@ export async function extendBooking(bookingId, extensionMinutes) {
             }
         })
         revalidatePath('/')
-        await triggerSocketUpdate()
+        await triggerSocketUpdate('extend-booking')
         return { success: true, booking: updatedBooking }
     }
     catch (error) {
@@ -190,7 +190,7 @@ export async function expireBooking(bookingId) {
         revalidatePath('/')
         revalidatePath('/dashboard')
         revalidatePath('/book-court')
-        await triggerSocketUpdate()
+        await triggerSocketUpdate('expire-booking')
         return { success: true }
     }
     catch (error) {
@@ -290,7 +290,7 @@ export async function secureBooking(data) {
             return booking
         })
         revalidatePath('/')
-        await triggerSocketUpdate()
+        await triggerSocketUpdate('secure-booking')
         return { success: true, booking: result }
     }
     catch (error) {

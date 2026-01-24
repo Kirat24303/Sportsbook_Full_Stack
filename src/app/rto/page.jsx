@@ -146,7 +146,7 @@ const CourtVisualization = ({ info }) => {
 };
 
 const OccupancyLocation = ({ info }) => {
-  console.log(info);
+  // console.log(info);
   if (info && (info.name?.toLowerCase() !== "gym") && (info.name?.toLowerCase() !== "swimming")) return (
     <div className="glass-panel w-full max-w-4xl mx-auto p-6 rounded-2xl mt-8">
       <h3 className="text-primary text-xl font-bold mb-4 flex items-center gap-2">
@@ -304,31 +304,7 @@ export default function Occupancy() {
   const [selectedSport, setSelectedSport] = useState("");
   const [activeTab, setActiveTab] = useState("liveVacancy");
 
-  useEffect(() => {
-    let socket;
 
-    refreshSports(true);
-
-    try {
-      socket = io();
-
-      socket.on("connect", () => {
-        // console.log("Connected to WebSocket");
-      });
-
-      socket.on("OCCUPANCY_UPDATE", () => {
-        // console.log("Real-time occupancy update received");
-        refreshSports(true);
-      });
-    }
-    catch (err) {
-      console.error("Socket connection failed", err);
-    }
-
-    return () => {
-      if (socket) socket.disconnect();
-    };
-  }, [refreshSports]);
 
   useEffect(() => {
     if (sports && sports.length > 0 && !selectedSport) {
