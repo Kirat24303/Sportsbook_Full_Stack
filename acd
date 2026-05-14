@@ -1,0 +1,120 @@
+SELECT * FROM "User";
+SELECT * FROM "Sport";
+SELECT * FROM "Booking";
+
+SELECT * FROM "Booking"
+WHERE "sportName"='Badminton';
+
+SELECT "sportName", COUNT(*) AS total_bookings
+FROM "Booking"
+GROUP BY "sportName";
+
+SELECT "sportName", COUNT(*)
+FROM "Booking"
+GROUP BY "sportName"
+HAVING COUNT(*) > 1;
+
+SELECT u.name, b."sportName"
+FROM "User" u
+JOIN "Booking" b
+ON u.id = b."userId";
+
+SELECT name
+FROM "User"
+WHERE id IN (
+SELECT "userId" FROM "Booking"
+);
+
+SELECT * FROM "Booking"
+ORDER BY date DESC;
+
+--------
+await prisma.booking.create({
+  data: {
+    userId: "U1",
+    sportName: "Badminton"
+  }
+})
+
+trigger one
+
+CREATE OR REPLACE FUNCTION prevent_duplicate_booking()
+RETURNS TRIGGER AS $$
+BEGIN
+IF EXISTS (
+SELECT 1 FROM "Booking"
+WHERE "userId" = NEW."userId"
+AND date = NEW.date
+AND "startTime" = NEW."startTime"
+)
+THEN
+RAISE EXCEPTION 'User already booked this slot';
+END IF;
+RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER booking_check
+BEFORE INSERT ON "Booking"
+FOR EACH ROW
+EXECUTE FUNCTION prevent_duplicate_booking();
+
+
+trigger demo
+INSERT INTO "Booking"
+("id","userId","sportName","numberOfPlayers","startTime","endTime","date","status","createdAt","updatedAt")
+VALUES
+('T1','U1','Badminton',2,'10:00','11:00','2026-03-21','ACTIVE',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+
+CREATE OR REPLACE FUNCTION update_player_count()
+RETURNS TRIGGER AS $$
+BEGIN
+UPDATE "Sport"
+SET "numPlayers" = COALESCE("numPlayers",0) + NEW."numberOfPlayers"
+WHERE name = NEW."sportName";
+RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER update_players
+AFTER INSERT ON "Booking"
+FOR EACH ROW
+EXECUTE FUNCTION update_player_count();
+
+--------
+BEGIN;
+
+INSERT INTO "Booking"
+("id","userId","sportName","numberOfPlayers","startTime","endTime","date","status","createdAt","updatedAt")
+VALUES
+('TX1','U1','Cricket',5,'09:00','10:00','2026-03-21','ACTIVE',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+
+ROLLBACK;
+
+SELECT * FROM "Booking";
+
+
+BEGIN;
+
+INSERT INTO "Booking"
+("id","userId","sportName","numberOfPlayers","startTime","endTime","date","status","createdAt","updatedAt")
+VALUES
+('TX2','U1','Cricket',5,'10:00','11:00','2026-03-21','ACTIVE',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+
+COMMIT;
+SELECT * FROM "Booking";
+
+
+conflicting
+
+BEGIN;
+
+INSERT INTO "Booking"
+("id","userId","sportName","numberOfPlayers","startTime","endTime","date","status","createdAt","updatedAt")
+VALUES
+('TX3','U2','Badminton',2,'18:00','19:00','2026-03-21','ACTIVE',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+
+INSERT INTO "Booking"
+("id","userId","sportName","numberOfPlayers","startTime","endTime","date","status","createdAt","updatedAt")
+VALUES
+('TX4','U2','Badminton',2,'18:00','19:00','2026-03-21','ACTIVE',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
